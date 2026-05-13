@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 from app.database import init_db, close_db
 from app.routes import upload, analytics
 import os
@@ -23,6 +23,6 @@ app.include_router(analytics.router)
 async def health():
     return {"status": "ok"}
 
-@app.get("/ecom")
+@app.get("/ecom",status_code=status.HTTP_418_IM_A_TEAPOT)
 async def teapot():
-    return {"message": "I'm a teapot"}, 418
+    return {"message": "I'm a teapot"}
