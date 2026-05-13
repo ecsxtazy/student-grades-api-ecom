@@ -25,3 +25,4 @@ async def get_less_than_5_twos():
             HAVING COUNT(g.id) < 5
             ORDER BY s.full_name
         """)
+    return [{"full_name": row["full_name"], "count_twos": row["count_twos"]} for row in rows]

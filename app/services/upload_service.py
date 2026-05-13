@@ -1,3 +1,8 @@
+import csv
+import io
+from app.database import get_db
+
+
 async def process_csv(data: bytes):
     text = data.decode('utf-8')
     reader = csv.DictReader(io.StringIO(text))
