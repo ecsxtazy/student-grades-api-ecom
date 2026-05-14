@@ -78,15 +78,5 @@ curl http://localhost:8000/health
 ## Остановка
 
 ```bash
-docker-compose down
+docker-compose up --build
 ```
-
-Полная очистка с удалением данных:
-```bash
-docker-compose down -v
-```
-
-## Документация
-
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
