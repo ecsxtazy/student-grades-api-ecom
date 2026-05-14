@@ -1,15 +1,15 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, status
-from app.database import init_db, close_db
+from app.database import db_pool
 from app.routes import upload, analytics
 import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     dsn = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@db:5432/grades_db")
-    await init_db(dsn)
+    await db_pool.init(dsn)
     yield
-    await close_db()
+    await db_pool.close()
 app = FastAPI(
     title="Student Grades Service",
     lifespan=lifespan,
