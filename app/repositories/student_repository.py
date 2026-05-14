@@ -41,7 +41,7 @@ async def get_more_than_3_twos(pool: asyncpg.Pool) -> List[Dict]:
     return [{"full_name": row["full_name"], "count_twos": row["count_twos"]} for row in rows]
 
 
-async def get_more_than_5_twos(pool: asyncpg.Pool) -> List[Dict]:
+async def get_less_than_5_twos(pool: asyncpg.Pool) -> List[Dict]:
     async with pool.acquire() as conn:
         rows = await conn.fetch("""
             SELECT s.full_name, COUNT(g.id) as count_twos
