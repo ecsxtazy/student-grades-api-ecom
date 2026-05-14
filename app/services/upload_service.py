@@ -1,17 +1,23 @@
 import csv
 import io
-from app.database import get_db
+from collections import defaultdict
+from typing import Dict, List, Tuple
 
 
-async def process_csv(data: bytes):
-    text = data.decode('utf-8')
+async def parse_csv(data: bytes) -> Tuple[Dict[str, List[int]], int, int]:
+    text = data.decode('utf-8-sig')
     reader = csv.DictReader(io.StringIO(text))
-    if reader.fieldnames != ['full_name', 'grade']:
-        raise ValueError("empty columns")
+    if not reader.fieldnames:
+        raise ValueError("CSV has no headers")
+    actual_headers = [column.strip().lower() for column in reader.fieldnames]
+    required_headers = {"full_name", "grade"}
+    missing_headers = required_headers - set(actual_headers)
+    if missing_headers:
+        raise ValueError(f"Missing required columns: {', '.join(missing_headers)}")
     rows = list(reader)
     if not rows:
         raise ValueError("CSV is empty")
-    student_grades = {}
+    student_grades: Dict[str, List[int]] = defaultdict(list)
     for i, row in enumerate(rows, start=2):
         name = row.get('full_name', '').strip()
         grade_str = row.get('grade', '').strip()
@@ -25,21 +31,9 @@ async def process_csv(data: bytes):
             raise ValueError(f"Row {i}: grade must be integer")
         if grade < 2 or grade > 5:
             raise ValueError(f"Row {i}: grade must >= 2 and <=5")
-        if name not in student_grades:
-            student_grades[name] = []
+
         student_grades[name].append(grade)
-    pool = await get_db()
-    async with pool.acquire() as conn:
-        async with conn.transaction():
-            for name, grades in student_grades.items():
-                row = await conn.fetchrow("SELECT id FROM students WHERE full_name = $1", name)
-                if row:
-                    student_id = row['id']
-                else:
-                    row = await conn.fetchrow("INSERT INTO students (full_name) VALUES ($1) RETURNING id", name)
-                    student_id = row['id']
-                for grade in grades:
-                    await conn.execute("INSERT INTO grades (student_id, grade) VALUES ($1, $2)", student_id, grade)
     records = sum(len(grades) for grades in student_grades.values())
     students = len(student_grades)
-    return records, students
+
+    return student_grades, records, students
