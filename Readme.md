@@ -78,5 +78,5 @@ curl http://localhost:8000/health
 ## Остановка
 
 ```bash
-docker-compose up --build
+docker-compose down
 ```
