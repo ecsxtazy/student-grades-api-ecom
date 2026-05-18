@@ -3,8 +3,10 @@ import io
 from collections import defaultdict
 from typing import Dict, List, Tuple
 
+from app.repositories.student_repository import StudentRepository
 
-async def parse_csv(data: bytes) -> Tuple[Dict[str, List[int]], int, int]:
+
+def parse_csv(data: bytes) -> Tuple[Dict[str, List[int]], int, int]:
     text = data.decode('utf-8-sig')
     reader = csv.DictReader(io.StringIO(text))
     if not reader.fieldnames:
@@ -37,3 +39,14 @@ async def parse_csv(data: bytes) -> Tuple[Dict[str, List[int]], int, int]:
     students = len(student_grades)
 
     return student_grades, records, students
+async def process_upload(repo:StudentRepository, csv_content: bytes)->Tuple[int, int]:
+    student_grades, records_loaded, students_count = parse_csv(csv_content)
+    student_names = list(student_grades.keys())
+    name_to_id = await repo.insert_students(student_names)
+    grade_records = []
+    for name, grades in student_grades.items():
+        student_id = name_to_id[name]
+        for grade in grades:
+            grade_records.append((student_id, grade))
+    await repo.insert_grades(grade_records)
+    return records_loaded, students_count
